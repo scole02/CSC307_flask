@@ -66,24 +66,36 @@ def get_users():
       # 200 is the default code for a normal response
       return resp
    elif request.method == 'DELETE':
-      del_username = request.get_json()["name"]
-      print(del_username)
-      print(type(del_username))
-      if del_username:
+      del_id = request.args.get('id')
+      if del_id:
          users['users_list'] = [user for user in users['users_list']\
-                                  if user['name'] != del_username]
-         return users
-   return users      
+                                  if user['id'] != del_id]
+      return users      
          
 
-@app.route('/users/<id>')
+@app.route('/users/<id>', methods=['GET', 'DELETE'])
 def get_user(id):
-   if id :
-      for user in users['users_list']:
-        if user['id'] == id:
-           return user
-      return ({})
-   return users
+   if request.method == "GET":
+      if id:
+         for user in users['users_list']:
+           if user['id'] == id:
+              return user
+         return ({})
+      return users
+   
+   if request.method == "DELETE":      
+      new_userlist = [user for user in users['users_list']\
+                                  if user['id'] != id]
+      if len(new_userlist) != len(users['users_list']):
+         resp = jsonify(success=True)
+         resp.status_code = 204
+         users['users_list'] = new_userlist 
+         return resp
+      resp = jsonify(success=False)
+      resp.status_code = 404  
+      return resp      
+
+
 
 def random_id():
    return uuid.uuid4()
